@@ -1,28 +1,31 @@
-let localVideo = document.getElementById("localVideo");
-let remoteVideo = document.getElementById("remoteVideo");
-let statsEl = document.getElementById("stats");
+const localVideo = document.getElementById("localVideo");
+const remoteVideo = document.getElementById("remoteVideo");
+const statsEl = document.getElementById("stats");
+const socket = io();
 
 let localStream, peer, micOn = true, camOn = true, camFacing = "user";
-let socket = io(), yourName, targetName, lastBytes = 0;
+let yourName, targetName, lastBytes = 0;
 
-async function start() {
+document.querySelector("button[onclick='start()']").onclick = async () => {
   yourName = document.getElementById("yourName").value.trim();
   targetName = document.getElementById("targetName").value.trim();
-  if (!yourName || !targetName) return alert("Enter names first!");
+  if (!yourName || !targetName) return alert("Enter both names!");
 
+  await startStream(); // capture cam early
   socket.emit("join", { user: yourName });
 
-  socket.on("ready", async () => {
-    await startStream();
+  socket.on("ready", () => {
     createPeer();
     if (yourName < targetName) {
-      peer.addTransceiver("video", { direction: "sendrecv" });
-      peer.addTransceiver("audio", { direction: "sendrecv" });
+      peer.signalOffer = true;
     }
   });
 
-  socket.on("signal", data => peer.signal(data));
-}
+  socket.on("signal", data => {
+    if (peer.destroyed) return console.warn("Peer destroyed, ignoring signal");
+    peer.signal(data);
+  });
+};
 
 async function startStream() {
   localStream = await navigator.mediaDevices.getUserMedia({
@@ -33,15 +36,25 @@ async function startStream() {
 }
 
 function createPeer() {
+  if (peer) peer.destroy();
   peer = new SimplePeer({ initiator: yourName < targetName, stream: localStream, trickle: false });
 
-  peer.on("signal", data => socket.emit("signal", { target: targetName, signal: data }));
+  peer.on("signal", data => {
+    if (!peer.destroyed) socket.emit("signal", { target: targetName, signal: data });
+  });
+
   peer.on("stream", stream => {
-    console.log("🔗 Connected. Receiving remote stream.");
+    console.log("🔗 Remote stream received");
     remoteVideo.srcObject = stream;
   });
-  peer.on("connect", () => console.log("🟢 Peer connected!"));
-  setInterval(logBandwidth, 60000);
+
+  peer.on("connect", () => {
+    console.log("✅ Peer connected");
+    setInterval(logBandwidth, 60000);
+  });
+
+  peer.on("close", () => console.log("Peer closed"));
+  peer.on("error", err => console.error("Peer error:", err));
 }
 
 function toggleMic() {
@@ -56,16 +69,11 @@ function toggleCam() {
 
 async function switchCam() {
   camFacing = camFacing === "user" ? "environment" : "user";
-  const newStream = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode: camFacing, width: 320, height: 240, frameRate: 10 },
-    audio: true
-  });
-  const videoTrack = newStream.getVideoTracks()[0];
-  const sender = peer.getSenders().find(s => s.track.kind === "video");
-  sender.replaceTrack(videoTrack);
-  localStream.getTracks().forEach(t => t.stop());
-  localStream = newStream;
-  localVideo.srcObject = newStream;
+  await startStream();
+  if (peer) {
+    peer.destroy();
+    createPeer();
+  }
 }
 
 function logBandwidth() {
