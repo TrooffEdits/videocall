@@ -1,3 +1,6 @@
+<script src="https://unpkg.com/simple-peer/simplepeer.min.js"></script>
+<script src="/static/main.js"></script>
+
 const localVideo = document.getElementById("localVideo");
 const remoteVideo = document.getElementById("remoteVideo");
 const statsEl = document.getElementById("stats");
