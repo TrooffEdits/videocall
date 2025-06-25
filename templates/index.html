@@ -2,19 +2,29 @@
 <html>
 <head>
   <title>Lite Call</title>
-  <style>video { width: 45%; }</style>
-  <script src="https://unpkg.com/simple-peer/simplepeer.min.js"></script>
+  <style>
+    video { width: 45%; margin: 5px; background: black; }
+    #controls button { margin: 5px; padding: 10px; }
+  </style>
 </head>
 <body>
-  <h2>Ultra Lite Call</h2>
+  <h2>Ultra Lite Video Call</h2>
   <video id="localVideo" autoplay muted playsinline></video>
-  <video id="remoteVideo" autoplay playsinline></video><br>
-  <button onclick="toggleMic()">🎙️</button>
-  <button onclick="toggleCam()">📷</button>
-  <button onclick="switchCam()">🔄</button>
-  <p id="stats">Data: 0 B/s</p>
+  <video id="remoteVideo" autoplay playsinline></video>
+  
+  <div id="controls">
+    <input type="text" id="yourName" placeholder="Your name">
+    <input type="text" id="targetName" placeholder="Target name">
+    <button onclick="start()">Connect</button>
+    <button onclick="toggleMic()">🎙️ Toggle Mic</button>
+    <button onclick="toggleCam()">📷 Toggle Cam</button>
+    <button onclick="switchCam()">🔄 Switch Camera</button>
+    <p id="stats">Data: 0 B/s</p>
+  </div>
 
+  <!-- Required libs -->
   <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <script src="https://unpkg.com/simple-peer/simplepeer.min.js"></script>
   <script src="/static/main.js"></script>
 </body>
 </html>
