@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Lite Call</title>
+  <style>video { width: 45%; }</style>
+</head>
+<body>
+  <h2>Ultra Lite Call</h2>
+  <video id="localVideo" autoplay muted playsinline></video>
+  <video id="remoteVideo" autoplay playsinline></video><br>
+  <button onclick="toggleMic()">🎙️</button>
+  <button onclick="toggleCam()">📷</button>
+  <button onclick="switchCam()">🔄</button>
+  <p id="stats">Data: 0 B/s</p>
+
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <script src="/static/main.js"></script>
+</body>
+</html>
